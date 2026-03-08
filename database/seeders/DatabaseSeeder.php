@@ -21,9 +21,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Admin user for Filament dashboard
-        User::factory()->create([
+        User::create([
             'name' => 'Digsan Admin',
             'email' => 'admin@digsan.id',
+            'email_verified_at' => now(),
             'password' => Hash::make('password'),
         ]);
 
