@@ -24,7 +24,7 @@ class UpdateService
         $domain->update(['last_check_at' => now()]);
 
         $activePlugins = Plugin::where('is_active', true)
-            ->with('latestVersion')
+            ->with('versions')
             ->get()
             ->keyBy('file_slug');
 
@@ -34,7 +34,8 @@ class UpdateService
             }
 
             $plugin = $activePlugins[$slug];
-            $latest = $plugin->latestVersion;
+            // Use semantic version comparison via attribute
+            $latest = $plugin->latest_version;
 
             if (! $latest) {
                 continue;
@@ -49,7 +50,7 @@ class UpdateService
                         'slug' => $plugin->slug,
                         'version' => $latest->version,
                     ]),
-                    'homepage' => $plugin->homepage ?? 'https://www.digsan.it.com/',
+                    'homepage' => $plugin->homepage ?? 'https://www.digsan.id/',
                     'description' => $plugin->description,
                     'requires_php' => $latest->requires_php ?? $plugin->requires_php,
                     'requires_wp' => $latest->requires_wp ?? $plugin->requires_wp,

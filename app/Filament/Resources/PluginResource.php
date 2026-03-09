@@ -51,7 +51,7 @@ class PluginResource extends Resource
                     ->maxLength(255),
                 FormComponents\TextInput::make('author_uri')
                     ->label('Author URI')
-                    ->default('https://www.digsan.it.com/')
+                    ->default('https://www.digsan.id/')
                     ->url()
                     ->maxLength(255),
                 FormComponents\TextInput::make('homepage')
@@ -87,10 +87,11 @@ class PluginResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('slug')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('latestVersion.version')
+                Tables\Columns\TextColumn::make('latest_version.version')
                     ->label('Latest Version')
                     ->badge()
-                    ->color('success'),
+                    ->color('success')
+                    ->placeholder('No versions'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean(),
