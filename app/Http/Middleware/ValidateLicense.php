@@ -11,12 +11,17 @@ class ValidateLicense
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $licenseKey = $request->input('license_key');
+        // Support both POST body and GET query parameters
+        $licenseKey = $request->input('license_key') ?? $request->query('license_key');
 
         if (empty($licenseKey)) {
             return response()->json([
                 'success' => false,
                 'message' => 'License key is required.',
+                'debug' => [
+                    'method' => $request->method(),
+                    'has_query' => $request->query->count(),
+                ],
             ], 401);
         }
 
@@ -26,6 +31,7 @@ class ValidateLicense
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid license key.',
+                'provided_key' => substr($licenseKey, 0, 8) . '...',
             ], 401);
         }
 

@@ -15,8 +15,9 @@ class ValidateDomain
 
     public function handle(Request $request, Closure $next): Response
     {
-        $licenseKey = $request->input('license_key');
-        $domain = $request->input('domain');
+        // Support both POST body and GET query parameters
+        $licenseKey = $request->input('license_key') ?? $request->query('license_key');
+        $domain = $request->input('domain') ?? $request->query('domain');
 
         if (empty($domain)) {
             return response()->json([
@@ -31,6 +32,7 @@ class ValidateDomain
             return response()->json([
                 'success' => false,
                 'message' => 'Domain is not registered or not active for this license.',
+                'provided_domain' => $domain,
             ], 403);
         }
 
