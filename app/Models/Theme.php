@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Theme extends Model
+{
+    protected $fillable = [
+        'name',
+        'slug',
+        'description',
+        'author',
+        'author_uri',
+        'homepage',
+        'requires_php',
+        'requires_wp',
+        'tested_wp',
+        'is_active',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function versions(): HasMany
+    {
+        return $this->hasMany(ThemeVersion::class)->orderByDesc('released_at');
+    }
+
+    /**
+     * Get the latest version by released_at, falling back to created_at
+     */
+    public function latestVersion(): HasOne
+    {
+        return $this->hasOne(ThemeVersion::class)
+            ->orderByRaw('COALESCE(released_at, created_at) DESC')
+            ->limit(1);
+    }
+
+    /**
+     * Get the latest version using semantic version comparison
+     */
+    public function getLatestVersionAttribute(): ?ThemeVersion
+    {
+        $versions = $this->versions()->get();
+
+        if ($versions->isEmpty()) {
+            return null;
+        }
+
+        return $versions->sortBy(function ($version) {
+            $parts = explode('.', $version->version);
+            $normalized = 0;
+            foreach ($parts as $i => $part) {
+                $normalized += intval($part) * pow(1000, 3 - $i);
+            }
+            return -$normalized;
+        })->first();
+    }
+}
