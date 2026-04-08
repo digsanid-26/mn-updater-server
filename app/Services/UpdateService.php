@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Domain;
 use App\Models\Plugin;
 use App\Models\UpdateLog;
+use App\Models\LicenseKey;
 
 class UpdateService
 {
@@ -23,6 +24,12 @@ class UpdateService
         // Update last_check_at
         $domain->update(['last_check_at' => now()]);
 
+        // Load excluded plugin IDs for this license
+        $license = $domain->licenseKey;
+        $excludedPluginIds = $license
+            ? $license->exclusions()->where('item_type', 'plugin')->where('is_excluded', true)->pluck('item_id')->toArray()
+            : [];
+
         $activePlugins = Plugin::where('is_active', true)
             ->with('versions')
             ->get()
@@ -34,6 +41,11 @@ class UpdateService
             }
 
             $plugin = $activePlugins[$slug];
+
+            // Skip if excluded for this license
+            if (in_array($plugin->id, $excludedPluginIds)) {
+                continue;
+            }
             // Use semantic version comparison via attribute
             $latest = $plugin->latest_version;
 

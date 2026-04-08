@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Models\LicenseExclusion;
 
 class LicenseKey extends Model
 {
@@ -30,6 +31,29 @@ class LicenseKey extends Model
     public function domains(): HasMany
     {
         return $this->hasMany(Domain::class);
+    }
+
+    public function exclusions(): HasMany
+    {
+        return $this->hasMany(LicenseExclusion::class);
+    }
+
+    public function isPluginExcluded(int $pluginId): bool
+    {
+        return $this->exclusions()
+            ->where('item_type', 'plugin')
+            ->where('item_id', $pluginId)
+            ->where('is_excluded', true)
+            ->exists();
+    }
+
+    public function isThemeExcluded(int $themeId): bool
+    {
+        return $this->exclusions()
+            ->where('item_type', 'theme')
+            ->where('item_id', $themeId)
+            ->where('is_excluded', true)
+            ->exists();
     }
 
     /**

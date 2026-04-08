@@ -68,6 +68,15 @@ class ThemeController extends Controller
             ], 404);
         }
 
+        // Check license exclusion
+        $license = $request->input('_domain')?->licenseKey ?? null;
+        if ($license && $license->isThemeExcluded($theme->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access to this theme is not permitted for your license.',
+            ], 403);
+        }
+
         $themeVersion = $theme->versions()
             ->where('version', $version)
             ->first();

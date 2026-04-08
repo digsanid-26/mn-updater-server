@@ -4,7 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\LicenseKeyResource\Pages;
 use App\Filament\Resources\LicenseKeyResource\RelationManagers\DomainsRelationManager;
+use App\Models\LicenseExclusion;
 use App\Models\LicenseKey;
+use App\Models\Plugin;
+use App\Models\Theme;
 use Filament\Actions;
 use Filament\Forms\Components as FormComponents;
 use Filament\Resources\Resource;
@@ -61,6 +64,50 @@ class LicenseKeyResource extends Resource
                     ->rows(3)
                     ->columnSpanFull(),
             ]),
+
+            LayoutComponents\Section::make('Plugin & Theme Access')
+                ->description('By default all plugins and themes are accessible. Toggle "Excluded" to revoke install, activate, and update access for this license.')
+                ->schema([
+                    FormComponents\Placeholder::make('plugin_access_header')
+                        ->label('Plugins')
+                        ->content(''),
+                    FormComponents\CheckboxList::make('excluded_plugins')
+                        ->label('')
+                        ->options(fn () => Plugin::where('is_active', true)->orderBy('name')->pluck('name', 'id')->toArray())
+                        ->descriptions(fn () => Plugin::where('is_active', true)->orderBy('name')->pluck('slug', 'id')->toArray())
+                        ->columns(2)
+                        ->helperText('Checked = excluded (no install / activate / update)')
+                        ->dehydrated(false)
+                        ->afterStateHydrated(function ($component, $state, $record) {
+                            if (! $record) return;
+                            $excluded = LicenseExclusion::where('license_key_id', $record->id)
+                                ->where('item_type', 'plugin')
+                                ->where('is_excluded', true)
+                                ->pluck('item_id')
+                                ->toArray();
+                            $component->state($excluded);
+                        }),
+
+                    FormComponents\Placeholder::make('theme_access_header')
+                        ->label('Themes')
+                        ->content(''),
+                    FormComponents\CheckboxList::make('excluded_themes')
+                        ->label('')
+                        ->options(fn () => Theme::where('is_active', true)->orderBy('name')->pluck('name', 'id')->toArray())
+                        ->descriptions(fn () => Theme::where('is_active', true)->orderBy('name')->pluck('slug', 'id')->toArray())
+                        ->columns(2)
+                        ->helperText('Checked = excluded (no install / activate / update)')
+                        ->dehydrated(false)
+                        ->afterStateHydrated(function ($component, $state, $record) {
+                            if (! $record) return;
+                            $excluded = LicenseExclusion::where('license_key_id', $record->id)
+                                ->where('item_type', 'theme')
+                                ->where('is_excluded', true)
+                                ->pluck('item_id')
+                                ->toArray();
+                            $component->state($excluded);
+                        }),
+                ]),
         ]);
     }
 

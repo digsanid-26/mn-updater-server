@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Domain;
 use App\Models\Theme;
+use App\Models\LicenseKey;
 
 class ThemeUpdateService
 {
@@ -19,6 +20,12 @@ class ThemeUpdateService
     {
         $updates = [];
 
+        // Load excluded theme IDs for this license
+        $license = $domain->licenseKey;
+        $excludedThemeIds = $license
+            ? $license->exclusions()->where('item_type', 'theme')->where('is_excluded', true)->pluck('item_id')->toArray()
+            : [];
+
         $activeThemes = Theme::where('is_active', true)
             ->with('versions')
             ->get()
@@ -30,6 +37,11 @@ class ThemeUpdateService
             }
 
             $theme = $activeThemes[$slug];
+
+            // Skip if excluded for this license
+            if (in_array($theme->id, $excludedThemeIds)) {
+                continue;
+            }
             $latest = $theme->latest_version;
 
             if (! $latest) {

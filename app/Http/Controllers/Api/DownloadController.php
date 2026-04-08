@@ -30,6 +30,15 @@ class DownloadController extends Controller
             ], 404);
         }
 
+        // Check license exclusion
+        $license = $request->input('_domain')?->licenseKey ?? null;
+        if ($license && $license->isPluginExcluded($plugin->id)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Access to this plugin is not permitted for your license.',
+            ], 403);
+        }
+
         $pluginVersion = $plugin->versions()
             ->where('version', $version)
             ->first();
